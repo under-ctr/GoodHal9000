@@ -153,3 +153,18 @@ void
 
     TestRunAllPerformance();
 }
+
+void
+(__cdecl CmdMyTest)(
+	IN          QWORD       NumberOfParameters,
+    IN          char*       Param1,
+    IN          char*       Param2
+	)
+{
+    if (NumberOfParameters == 1) {
+        LOG("there are 1 parmetre: %s\n", Param1);
+    }
+    else if (NumberOfParameters == 2) {
+        LOG("there are 2 parametres: %s and %s\n", Param1, Param2);
+    }
+}
