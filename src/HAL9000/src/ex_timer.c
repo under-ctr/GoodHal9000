@@ -23,9 +23,13 @@ ExTimerInit(
     IN      EX_TIMER_TYPE   Type,
     IN      QWORD           Time
     )
-{
+{   
+
+    //PVOID  context;
     STATUS status;
     INTR_STATE oldState;
+
+    //UNREFERENCED_PARAMETER(context);
 
     if (NULL == Timer)
     {
@@ -38,9 +42,6 @@ ExTimerInit(
     }
 
     status = STATUS_SUCCESS;
-
-    
-
 
     memzero(Timer, sizeof(EX_TIMER));
 
@@ -59,10 +60,11 @@ ExTimerInit(
         // absolute
         Timer->TriggerTimeUs = Time;
     }
+
     status = ExEventInit(&Timer->TimerEvent, ExEventTypeNotification, FALSE);
     LockAcquire(&m_globalTimerList.TimerListLock, &oldState);
-   // InsertOrderedList(&m_globalTimerList.TimerListHead, &Timer->TimerListElem, ExTimerCompareListElems(&m_globalTimerList.TimerListHead, &Timer->TimerListElem));
-    InsertTailList(&m_globalTimerList.TimerListHead, &Timer->TimerListElem);
+    //InsertTailList(&m_globalTimerList.TimerListHead, &Timer->TimerListElem);
+    InsertOrderedList(&m_globalTimerList.TimerListHead, &Timer->TimerListElem,(PFUNC_CompareFunction)ExTimerCompareListElems,NULL);
     LockRelease(&m_globalTimerList.TimerListLock, oldState);
 
     return status;
@@ -152,17 +154,16 @@ ExTimerCheck(
 
 }
 
+static
 STATUS
-(_cdecl  _TimerFunc)(
+(_cdecl  _MyTimerFunc)(
 	IN          PLIST_ENTRY     ListEntry,
 	IN_OPT      PVOID           Context
 	)
 {
 	UNREFERENCED_PARAMETER(Context);
-	PEX_TIMER timeEntry = CONTAINING_RECORD(ListEntry, EX_TIMER, TimerListElem);
-
-	ExTimerCheck(timeEntry);
-
+	PEX_TIMER timerEntry = CONTAINING_RECORD(ListEntry, EX_TIMER, TimerListElem);
+	ExTimerCheck(timerEntry);
 	return STATUS_SUCCESS;
 
 }
@@ -175,7 +176,6 @@ ExTimerSystemPreinit(
 ) 
 {
     memzero(&m_globalTimerList, sizeof(GLOBAL_TIMER_LIST));
-
     InitializeListHead(&m_globalTimerList.TimerListHead);
     LockInit(&m_globalTimerList.TimerListLock);
 }
@@ -188,9 +188,8 @@ ExTimerCheckAll(
 {
     INTR_STATE oldState;
     
-
 	LockAcquire(&m_globalTimerList.TimerListLock, &oldState);
-    ForEachElementExecute(&m_globalTimerList.TimerListHead, _TimerFunc, NULL, FALSE);
+    ForEachElementExecute(&m_globalTimerList.TimerListHead, _MyTimerFunc, NULL, FALSE);
 	LockRelease(&m_globalTimerList.TimerListLock, oldState);
 
 }
@@ -212,14 +211,14 @@ INT64
 ExTimerCompareListElems(
     IN      PLIST_ENTRY     Timer1,
     IN      PLIST_ENTRY     Timer2
+    //IN_OPT  PVOID           Context
 )
 {
-    PEX_TIMER t1 = NULL;
-    PEX_TIMER t2 = NULL;
+    
+    
+    PEX_TIMER firstTimer = CONTAINING_RECORD(Timer1, EX_TIMER, TimerListElem);
+    PEX_TIMER secondTimer = CONTAINING_RECORD(Timer2, EX_TIMER, TimerListElem);
+    
 
-    t1 = CONTAINING_RECORD(Timer1, EX_TIMER, TimerListElem);
-    t2 = CONTAINING_RECORD(Timer2, EX_TIMER, TimerListElem);
-    // EX_TIMER t1 = CONTAINING_RECORD(&Timer1->Flink, EX_TIMER, "TimerEvent");
-
-    return ExTimerCompareTimers(t1, t2);
+    return ExTimerCompareTimers(firstTimer, secondTimer);
 }
