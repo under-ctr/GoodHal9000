@@ -9,7 +9,7 @@ typedef struct _SEMAPHORE
 	DWORD           Value;
 
 	//pointer to the CPU structer holding the lock 
-	PVOID			Holder;
+	struct _THREAD* Holder;
 
 	LOCK			SemaphoreLock;
 
