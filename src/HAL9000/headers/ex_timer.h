@@ -1,4 +1,5 @@
 #pragma once
+#include <ex_event.h>
 
 typedef enum _EX_TIMER_TYPE
 {
@@ -17,6 +18,12 @@ typedef struct _EX_TIMER
     QWORD               ReloadTimeUs;
 
     EX_TIMER_TYPE       Type;
+
+	// keep track of threads waiting ( blocked ) for the timer
+	EX_EVENT            TimerEvent;
+
+	// used to place the timer in a global timer list
+    LIST_ENTRY          TimerListElem;
 
     volatile BOOLEAN    TimerStarted;
     BOOLEAN             TimerUninited;
@@ -116,3 +123,25 @@ ExTimerCompareTimers(
     IN      PEX_TIMER     FirstElem,
     IN      PEX_TIMER     SecondElem
     );
+
+void
+ExTimerCheck(
+IN          PEX_TIMER       Timer
+);
+
+void
+_No_competing_thread_
+ExTimerSystemPreinit(
+    void
+);
+
+void
+ExTimerCheckAll(
+	void
+);
+
+INT64
+ExTimerCompareListElems(
+    IN      PLIST_ENTRY     Timer1,
+    IN      PLIST_ENTRY     Timer2
+);

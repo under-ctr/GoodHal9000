@@ -1,0 +1,45 @@
+diff --git a/src/HAL9000/headers/cmd_basic.h b/src/HAL9000/headers/cmd_basic.h
+index b8bbe0a..ad7aa39 100644
+--- a/src/HAL9000/headers/cmd_basic.h
++++ b/src/HAL9000/headers/cmd_basic.h
+@@ -13,3 +13,4 @@ FUNC_GenericCommand CmdSetLogComponents;
+ FUNC_GenericCommand CmdClearScreen;
+ FUNC_GenericCommand CmdRunAllFunctionalTests;
+ FUNC_GenericCommand CmdRunAllPerformanceTests;
++FUNC_GenericCommand CmdMyTest;
+diff --git a/src/HAL9000/src/cmd_basic.c b/src/HAL9000/src/cmd_basic.c
+index 33859c5..5f6309b 100644
+--- a/src/HAL9000/src/cmd_basic.c
++++ b/src/HAL9000/src/cmd_basic.c
+@@ -153,3 +153,18 @@ void
+ 
+     TestRunAllPerformance();
+ }
++
++void
++(__cdecl CmdMyTest)(
++	IN          QWORD       NumberOfParameters,
++    IN          char*       Param1,
++    IN          char*       Param2
++	)
++{
++    if (NumberOfParameters == 1) {
++        LOG("there are 1 parmetre: %s\n", Param1);
++    }
++    else if (NumberOfParameters == 2) {
++        LOG("there are 2 parametres: %s and %s\n", Param1, Param2);
++    }
++}
+diff --git a/src/HAL9000/src/cmd_interpreter.c b/src/HAL9000/src/cmd_interpreter.c
+index d987fe9..f9c0573 100644
+--- a/src/HAL9000/src/cmd_interpreter.c
++++ b/src/HAL9000/src/cmd_interpreter.c
+@@ -106,6 +106,8 @@ static const COMMAND_DEFINITION COMMANDS[] =
+     { "rangefail", "Causes a range check failure to assert", CmdRangeFail, 0, 0},
+     { "bitecookie", "Causes a GS cookie corruption to assert", CmdBiteCookie, 0, 0},
+ 
++    { "MyTest", "Simple Test", CmdMyTest, 1, 2},
++
+     { "help", "Displays this help menu", _CmdPrintHelp, 0, 0}
+ };
+ 
