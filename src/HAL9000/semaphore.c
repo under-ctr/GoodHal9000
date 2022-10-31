@@ -7,6 +7,12 @@ SemaphoreInit(
 	IN      DWORD           InitialValue
 )
 {
+	ASSERT(NULL != Semaphore);
+
+	memzero(Semaphore, sizeof(Semaphore));
+
+	MutexInit(&Semaphore->SemaphoreLock);
+	InitializeListHead(&Semaphore->WaitingList);
 
 }
 
