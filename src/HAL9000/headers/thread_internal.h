@@ -57,6 +57,9 @@ typedef struct _THREAD
     // List of all the threads in the system (including those blocked or dying)
     LIST_ENTRY              AllList;
 
+    //List of the threads waiting on a resurce 
+    LIST_ENTRY              WaiterList;
+
     // List of the threads ready to run
     LIST_ENTRY              ReadyList;
 

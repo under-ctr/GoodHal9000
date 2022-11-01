@@ -1,0 +1,174 @@
+diff --git a/src/HAL9000/HAL9000.vcxproj b/src/HAL9000/HAL9000.vcxproj
+index 779c36a..d34ccc7 100644
+--- a/src/HAL9000/HAL9000.vcxproj
++++ b/src/HAL9000/HAL9000.vcxproj
+@@ -181,6 +181,7 @@
+     </PostBuildEvent>
+   </ItemDefinitionGroup>
+   <ItemGroup>
++    <ClCompile Include="semaphore.c" />
+     <ClCompile Include="src\acpi_interface.c" />
+     <ClCompile Include="src\acpi_osl.c" />
+     <ClCompile Include="src\ap_tramp.c" />
+@@ -366,6 +367,7 @@
+     <ClInclude Include="headers\um_application.h" />
+     <ClInclude Include="headers\vmm.h" />
+     <ClInclude Include="headers\vm_reservation_space.h" />
++    <ClInclude Include="semaphore.h" />
+   </ItemGroup>
+   <ItemGroup>
+     <YASM Include="src\_mboot32.yasm">
+diff --git a/src/HAL9000/HAL9000.vcxproj.filters b/src/HAL9000/HAL9000.vcxproj.filters
+index 0d3b52f..4d29382 100644
+--- a/src/HAL9000/HAL9000.vcxproj.filters
++++ b/src/HAL9000/HAL9000.vcxproj.filters
+@@ -402,6 +402,9 @@
+     <ClCompile Include="src\test_process.c">
+       <Filter>Source Files\debug\test\userprog</Filter>
+     </ClCompile>
++    <ClCompile Include="semaphore.c">
++      <Filter>Source Files\executive</Filter>
++    </ClCompile>
+   </ItemGroup>
+   <ItemGroup>
+     <ClInclude Include="headers\HAL9000.h">
+@@ -704,6 +707,9 @@
+     <ClInclude Include="headers\test_process.h">
+       <Filter>Header Files\debug\test\userprog</Filter>
+     </ClInclude>
++    <ClInclude Include="semaphore.h">
++      <Filter>Header Files\executive</Filter>
++    </ClInclude>
+   </ItemGroup>
+   <ItemGroup>
+     <None Include="src\defines.yasm">
+diff --git a/src/HAL9000/semaphore.c b/src/HAL9000/semaphore.c
+new file mode 100644
+index 0000000..ca906e3
+--- /dev/null
++++ b/src/HAL9000/semaphore.c
+@@ -0,0 +1,76 @@
++#include "semaphore.h"
++#include "HAL9000.h"
++#include "thread_internal.h"
++
++
++void
++SemaphoreInit(
++	OUT     PSEMAPHORE      Semaphore,
++	IN      DWORD           InitialValue
++)
++{
++	ASSERT(NULL != Semaphore);
++
++	memzero(Semaphore, sizeof(Semaphore));
++
++	LockInit(&Semaphore->SemaphoreLock);
++	InitializeListHead(&Semaphore->WaitingList);
++
++
++}
++
++
++void
++SemaphoreDown(
++	INOUT   PSEMAPHORE      Semaphore,
++	IN      DWORD           Value
++)
++{	
++	INTR_STATE oldState;
++	INTR_STATE dummyState;
++	
++
++	ASSERT(NULL != Semaphore);
++	oldState = CpuIntrDisable();
++
++	if (Semaphore->Value >= Value) {
++		LockAcquire(&Semaphore->SemaphoreLock, &dummyState);
++		Semaphore->Value -= Value;
++		LockRelease(&Semaphore->SemaphoreLock, dummyState);
++	}
++	else {
++		PTHREAD pCurrentThread = GetCurrentThread();
++		InsertTailList(&Semaphore->WaitingList, &pCurrentThread->ReadyList);
++		ThreadTakeBlockLock();
++		LockRelease(&Semaphore->SemaphoreLock, dummyState);
++		ThreadBlock();
++		LockAcquire(&Semaphore->SemaphoreLock, &dummyState);
++	
++	}
++
++	LockRelease(&Semaphore->SemaphoreLock, dummyState);
++
++	CpuIntrSetState(oldState);
++}
++
++
++void
++SemaphoreUp(
++	INOUT   PSEMAPHORE      Semaphore,
++	IN      DWORD           Value
++)
++{
++	INTR_STATE oldState;
++	PTHREAD pThread;
++
++	LockAcquire(&Semaphore->SemaphoreLock, &oldState);
++	Semaphore->Value += Value;
++	LockRelease(&Semaphore->SemaphoreLock, oldState);
++
++	for (int i = 0; i < Value; i++) {
++		pThread = RemoveHeadList(&Semaphore->WaitingList);
++		if(pThread != NULL)
++			ThreadUnblock(pThread);
++	}
++
++}
+\ No newline at end of file
+diff --git a/src/HAL9000/semaphore.h b/src/HAL9000/semaphore.h
+new file mode 100644
+index 0000000..401e8d7
+--- /dev/null
++++ b/src/HAL9000/semaphore.h
+@@ -0,0 +1,40 @@
++#pragma once
++
++#include <common_lib.h>
++#include "synch.h"
++#include <list.h>
++
++typedef struct _SEMAPHORE
++{
++	DWORD           Value;
++
++	//pointer to the CPU structer holding the lock 
++	struct _THREAD* Holder;
++
++	LOCK			SemaphoreLock;
++
++	_Guarded_by_(SemaphoreLock)
++	LIST_ENTRY		WaitingList;
++
++	// ... add more fields here ...
++} SEMAPHORE, * PSEMAPHORE;
++
++void
++SemaphoreInit(
++	OUT     PSEMAPHORE      Semaphore,
++	IN      DWORD           InitialValue
++);
++
++
++void
++SemaphoreDown(
++	INOUT   PSEMAPHORE      Semaphore,
++	IN      DWORD           Value
++);
++
++
++void
++SemaphoreUp(
++	INOUT   PSEMAPHORE      Semaphore,
++	IN      DWORD           Value
++);
+\ No newline at end of file

@@ -6,14 +6,15 @@
 
 typedef struct _SEMAPHORE
 {
+
+	//MUTEX			MutexLock;
 	DWORD           Value;
 
-	//pointer to the CPU structer holding the lock 
-	struct _THREAD* Holder;
+	SPINLOCK		SpinLock;
 
-	LOCK			SemaphoreLock;
+	//LOCK			SemaphoreLock;
 
-	_Guarded_by_(SemaphoreLock)
+	//_Guarded_by_(SpinLock)
 	LIST_ENTRY		WaitingList;
 
 	// ... add more fields here ...

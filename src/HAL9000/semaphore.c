@@ -11,11 +11,11 @@ SemaphoreInit(
 {
 	ASSERT(NULL != Semaphore);
 
-	memzero(Semaphore, sizeof(Semaphore));
 
-	LockInit(&Semaphore->SemaphoreLock);
+	//MutexInit(&Semaphore->MutexLock, FALSE);
+	SpinlockInit(&Semaphore->SpinLock);
+	Semaphore->Value = InitialValue;
 	InitializeListHead(&Semaphore->WaitingList);
-
 
 }
 
@@ -31,26 +31,26 @@ SemaphoreDown(
 	
 
 	ASSERT(NULL != Semaphore);
-	oldState = CpuIntrDisable();
+	oldState = CpuIntrGetState();
 
 	if (Semaphore->Value >= Value) {
-		LockAcquire(&Semaphore->SemaphoreLock, &dummyState);
+		SpinlockAcquire(&Semaphore->SpinLock, &dummyState);
 		Semaphore->Value -= Value;
-		LockRelease(&Semaphore->SemaphoreLock, dummyState);
+		SpinlockRelease(&Semaphore->SpinLock, dummyState);
 	}
 	else {
 		PTHREAD pCurrentThread = GetCurrentThread();
-		InsertTailList(&Semaphore->WaitingList, &pCurrentThread->ReadyList);
+		InsertTailList(&Semaphore->WaitingList, &pCurrentThread->WaiterList);
 		ThreadTakeBlockLock();
-		LockRelease(&Semaphore->SemaphoreLock, dummyState);
+		SpinlockAcquire(&Semaphore->SpinLock, dummyState);
 		ThreadBlock();
-		LockAcquire(&Semaphore->SemaphoreLock, &dummyState);
+		SpinlockAcquire(&Semaphore->SpinLock, &dummyState);
 	
 	}
 
-	LockRelease(&Semaphore->SemaphoreLock, dummyState);
+	
 
-	CpuIntrSetState(oldState);
+	
 }
 
 
@@ -63,14 +63,17 @@ SemaphoreUp(
 	INTR_STATE oldState;
 	PTHREAD pThread;
 
-	LockAcquire(&Semaphore->SemaphoreLock, &oldState);
+	SpinlockAcquire(&Semaphore->SpinLock, &oldState);
 	Semaphore->Value += Value;
-	LockRelease(&Semaphore->SemaphoreLock, oldState);
+	SpinlockRelease(&Semaphore->SpinLock, oldState);
 
 	for (int i = 0; i < Value; i++) {
-		pThread = RemoveHeadList(&Semaphore->WaitingList);
-		if(pThread != NULL)
-			ThreadUnblock(pThread);
+		SpinlockAcquire(&Semaphore->SpinLock, &oldState);
+		PLIST_ENTRY entryThread = RemoveHeadList(&Semaphore->WaitingList);
+		if (entryThread != NULL)
+			pThread = CONTAINING_RECORD(entryThread, THREAD, WaiterList);
+			if(pThread->State == ThreadStateBlocked)
+				ThreadUnblock(pThread);
 	}
-
+	SpinlockRelease(&Semaphore->SpinLock, oldState);
 }
