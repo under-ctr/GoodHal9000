@@ -306,3 +306,8 @@ SyscallFileWrite(
     IN  QWORD                       BytesToWrite,
     OUT QWORD*                      BytesWritten
     );
+
+STATUS
+SyscallNewSyscall(
+    IN      QWORD       NoNeed
+);

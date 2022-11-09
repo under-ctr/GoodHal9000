@@ -196,3 +196,12 @@ SyscallFileWrite(
 {
     return SyscallEntry(SyscallIdFileWrite, FileHandle, Buffer, BytesToWrite, BytesWritten);
 }
+
+STATUS
+SyscallNewSyscall(
+    IN      QWORD       NoNeed
+)
+{
+    return SyscallEntry(SyscallIdNewSyscall, NoNeed);
+}
+

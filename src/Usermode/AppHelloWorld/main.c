@@ -15,6 +15,8 @@ __main(
     PID pid;
     UM_HANDLE umHandle;
 
+    //SyscallNewSyscall(4);
+    
     LOG("Hello from your usermode application!\n");
 
     LOG("Number of arguments 0x%x\n", argc);

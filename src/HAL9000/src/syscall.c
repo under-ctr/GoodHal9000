@@ -67,6 +67,9 @@ SyscallHandler(
         case SyscallIdIdentifyVersion:
             status = SyscallValidateInterface((SYSCALL_IF_VERSION)*pSyscallParameters);
             break;
+        case SyscallIdNewSyscall:
+            status = SyscallNewSyscall((QWORD)pSyscallParameters[0]);
+            break;
         // STUDENT TODO: implement the rest of the syscalls
         default:
             LOG_ERROR("Unimplemented syscall called from User-space!\n");
@@ -170,3 +173,12 @@ SyscallValidateInterface(
 }
 
 // STUDENT TODO: implement the rest of the syscalls
+
+STATUS
+SyscallNewSyscall(
+    IN      QWORD       NoNeed
+) {
+    UNREFERENCED_PARAMETER(NoNeed);
+    LOG("How is a good SYSETEMCALL?");
+    return STATUS_SUCCESS;
+}
