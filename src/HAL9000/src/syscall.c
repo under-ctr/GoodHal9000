@@ -74,6 +74,9 @@ SyscallHandler(
         case SyscallIdThreadExit:
             status = SyscallThreadExit((STATUS)pSyscallParameters[0]);
             break;
+        case SyscallIdThreadCreate:
+            status = SyscallThreadCreate((PFUNC_ThreadStart)pSyscallParameters[0], (PVOID)pSyscallParameters[1], (UM_HANDLE)pSyscallParameters[2]);
+            break;
         default:
             LOG_ERROR("Unimplemented syscall called from User-space!\n");
             status = STATUS_UNSUPPORTED;
@@ -176,6 +179,7 @@ SyscallValidateInterface(
     return STATUS_SUCCESS;
 }
 
+/*
 STATUS
 SyscallFileWrite(
     IN UM_HANDLE FileHandle,
@@ -194,6 +198,40 @@ SyscallFileWrite(
 
 
 }
+*/
+STATUS
+SyscallFileWrite(
+    IN UM_HANDLE File_Handle,
+    IN_READS_BYTES(BytesToWrite)
+    PVOID         buffer,
+    IN QWORD       BytesToWrite,
+    OUT QWORD* BytesWritten
+
+)
+{
+    UNREFERENCED_PARAMETER(File_Handle);
+    UNREFERENCED_PARAMETER(BytesToWrite);
+    LOG("[%s]:[%s]\n", ProcessGetName(NULL), buffer);
+    *BytesWritten = 10;
+
+    return STATUS_SUCCESS;
+}
+
+STATUS
+SyscallThreadCreate(
+    IN      PFUNC_ThreadStart       StartFunction,
+    IN_OPT  PVOID                   Context,
+    OUT     UM_HANDLE*              ThreadHandle
+) {
+    char name;
+
+    PTHREAD* newThred;
+    ThreadCreate(name, ThreadPriorityDefault, StartFunction, Context, newThred);
+    ThreadHandle = newThred->Id;
+    
+        
+}
+
 
 STATUS
 SyscallThreadExit(
