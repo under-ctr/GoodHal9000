@@ -10,6 +10,29 @@ typedef DWORD SYSCALL_IF_VERSION;
 
 typedef QWORD UM_HANDLE;
 
+typedef struct _UM_HANDLE_SYSTEM_DATA
+{
+	LOCK                AllUmHandlersLock;
+
+	_Guarded_by_(AllUmHandlersLock)
+		LIST_ENTRY          AllUmHandlersList;
+
+	
+} UM_HANDLE_SYSTEM_DATA, * PUM_HANDLE_SYSTEM_DATA;
+
+
+typedef struct _UM_HANDLE_STRUCT
+{
+
+	struct _THREAD*			Thred;
+
+	QWORD					Id;
+
+	struct _PROCESS*		Process;
+
+} UM_HANDLE_STRUCT, * PUM_HANDLE_STRUCT;
+
+
 #include "mem_structures.h"
 #include "thread_defs.h"
 #include "process_defs.h"
