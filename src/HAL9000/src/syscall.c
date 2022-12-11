@@ -79,10 +79,10 @@ SyscallHandler(
         switch (sysCallId)
         {
         case SyscallIdIdentifyVersion:
-            status = SyscallValidateInterface((SYSCALL_IF_VERSION)*pSyscallParameters);
+            //status = SyscallValidateInterface((SYSCALL_IF_VERSION)*pSyscallParameters);
             break;
         case SyscallIdFileWrite:
-            status = SyscallFileWrite((UM_HANDLE)pSyscallParameters[0], (PVOID)pSyscallParameters[1], (QWORD)pSyscallParameters[2], (QWORD*)pSyscallParameters[3]);
+            //status = SyscallFileWrite((UM_HANDLE)pSyscallParameters[0], (PVOID)pSyscallParameters[1], (QWORD)pSyscallParameters[2], (QWORD*)pSyscallParameters[3]);
         // STUDENT TODO: implement the rest of the syscalls
         case SyscallIdThreadExit:
             status = SyscallThreadExit((STATUS)pSyscallParameters[0]);
@@ -93,13 +93,30 @@ SyscallHandler(
 		case SyscallIdThreadGetTid:
 			status = SyscallThreadGetTid((UM_HANDLE)pSyscallParameters[0], (TID*)pSyscallParameters[1]);
 			break;
-        /*
+        
 		case SyscallIdThreadWaitForTermination:
-			status = SyscallThreadWaitForTermination((UM_HANDLE)pSyscallParameters[0], (STATUS*)pSyscallParameters[1]);
+			//status = SyscallThreadWaitForTermination((UM_HANDLE)pSyscallParameters[0], (STATUS*)pSyscallParameters[1]);
 			break;
 		case SyscallIdThreadCloseHandle:
-			status = SyscallThreadCloseHandle((UM_HANDLE)pSyscallParameters[0]);
-			break;*/
+			//status = SyscallThreadCloseHandle((UM_HANDLE)pSyscallParameters[0]);
+			break;
+
+		case SyscallIdProcessExit:
+				//SyscallProcessExit((STATUS)pSyscallParameters[0]);
+				break;
+
+		case SyscallIdProcessCreate:
+				//status = SyscallProcessCreate((char*)pSyscallParameters[0], pSyscallParameters[1], (char*)pSyscallParameters[2], pSyscallParameters[3], (UM_HANDLE*)pSyscallParameters[4]);
+				break;
+		case SyscallIdProcessGetPid:
+				//status = SyscallProcessGetPid((UM_HANDLE)pSyscallParameters[0], (PID*)pSyscallParameters[1]);
+				break;
+		case SyscallIdProcessWaitForTermination:
+				//status = SyscallProcessWaitForTermination(pSyscallParameters[0], (STATUS*)pSyscallParameters[1]);
+				break;
+		case SyscallIdProcessCloseHandle:
+				//status = SyscallProcessCloseHandle(pSyscallParameters[0]);
+				break;	
         default:
             LOG_ERROR("Unimplemented syscall called from User-space!\n");
             status = STATUS_UNSUPPORTED;
@@ -288,9 +305,9 @@ SyscallThreadGetTid(
 		*ThreadId = newThred->Id;
 		return STATUS_SUCCESS;
 	}
-    ListSearchForElement()
-    //PHASH_ENTRY threadEntry = HashTableLookup()
-
+    
+    
+    return STATUS_SUCCESS;
 }
 
 
