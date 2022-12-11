@@ -13,6 +13,19 @@ extern void SyscallEntry();
 
 #define SYSCALL_IF_VERSION_KM       SYSCALL_IMPLEMENTED_IF_VERSION
 
+typedef struct _UM_HANDLE_SYSTEM_DATA
+{
+	LOCK                AllUmHandlersLock;
+
+	_Guarded_by_(AllUmHandlersLock)
+		LIST_ENTRY          AllUmHandlersList;
+
+
+} UM_HANDLE_SYSTEM_DATA, *PUM_HANDLE_SYSTEM_DATA;
+
+
+static UM_HANDLE_SYSTEM_DATA m_umHandlerSystemData;
+
 void
 SyscallHandler(
     INOUT   COMPLETE_PROCESSOR_STATE    *CompleteProcessorState
@@ -75,8 +88,18 @@ SyscallHandler(
             status = SyscallThreadExit((STATUS)pSyscallParameters[0]);
             break;
         case SyscallIdThreadCreate:
-            status = SyscallThreadCreate((PFUNC_ThreadStart)pSyscallParameters[0], (PVOID)pSyscallParameters[1], (UM_HANDLE)pSyscallParameters[2]);
+            status = SyscallThreadCreate((PFUNC_ThreadStart)pSyscallParameters[0], (PVOID)pSyscallParameters[1], (UM_HANDLE*)pSyscallParameters[2]);
             break;
+		case SyscallIdThreadGetTid:
+			status = SyscallThreadGetTid((UM_HANDLE)pSyscallParameters[0], (TID*)pSyscallParameters[1]);
+			break;
+        /*
+		case SyscallIdThreadWaitForTermination:
+			status = SyscallThreadWaitForTermination((UM_HANDLE)pSyscallParameters[0], (STATUS*)pSyscallParameters[1]);
+			break;
+		case SyscallIdThreadCloseHandle:
+			status = SyscallThreadCloseHandle((UM_HANDLE)pSyscallParameters[0]);
+			break;*/
         default:
             LOG_ERROR("Unimplemented syscall called from User-space!\n");
             status = STATUS_UNSUPPORTED;
@@ -223,13 +246,51 @@ SyscallThreadCreate(
     IN_OPT  PVOID                   Context,
     OUT     UM_HANDLE*              ThreadHandle
 ) {
-    char name;
+    
 
     PTHREAD* newThred;
+    char* name = "name";
+    PUM_HANDLE_STRUCT UmHandler;
+    INTR_STATE oldIntrState;
+
+    newThred = NULL;
+    UmHandler = NULL;
+
     ThreadCreate(name, ThreadPriorityDefault, StartFunction, Context, newThred);
-    ThreadHandle = newThred->Id;
-    
-        
+    //ThreadHandle = (UM_HANDLE)newThred->Id;
+    UmHandler->Thred = newThred;
+    UmHandler->Id = 3;
+    //o variabila pe care sa o initializez cu zero atunci cand porneste sistemu si incrementata cu 1 
+    ThreadHandle =(UM_HANDLE*)UmHandler->Id;
+
+	LockAcquire(&m_umHandlerSystemData.AllUmHandlersLock, &oldIntrState);
+	InsertTailList(&m_umHandlerSystemData.AllUmHandlersList, &UmHandler->AllList);
+	LockRelease(&m_umHandlerSystemData.AllUmHandlersLock, oldIntrState);
+
+    return STATUS_SUCCESS;
+
+
+}
+
+STATUS
+SyscallThreadGetTid(
+    IN_OPT  UM_HANDLE               ThreadHandle,
+    OUT     TID*                    ThreadId
+) {
+    PTHREAD newThred;
+	if (ThreadHandle == UM_INVALID_HANDLE_VALUE) {
+		newThred = GetCurrentThread();
+
+		if (newThred == NULL) {
+			return STATUS_UNSUCCESSFUL;
+		}
+
+		*ThreadId = newThred->Id;
+		return STATUS_SUCCESS;
+	}
+    ListSearchForElement()
+    //PHASH_ENTRY threadEntry = HashTableLookup()
+
 }
 
 
@@ -238,7 +299,7 @@ SyscallThreadExit(
     IN      STATUS      ExitStatus
 ) {
     ThreadExit(ExitStatus);
-    return STATUS_SUCCESS;
+    return ExitStatus;
 }
 //functii: IsBufferValid si isStringValid
 

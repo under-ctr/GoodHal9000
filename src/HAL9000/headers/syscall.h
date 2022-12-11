@@ -1,15 +1,19 @@
 #pragma once
-
+#include "thread_internal.h"
 typedef struct _UM_HANDLE_STRUCT
 {
 	
-	struct _THREAD*         Thred;
+    PTHREAD*               Thred;
 
-	QWORD                    Id;
+	QWORD                   Id;
+
+    LIST_ENTRY              AllList;
 	
-	struct _PROCESS*        Process;
+	
 
-} UM_HANDLE_STRUCT, * PUM_HANDLE_STRUCT;
+} UM_HANDLE_STRUCT, *PUM_HANDLE_STRUCT;
+
+
 
 void
 SyscallPreinitSystem(

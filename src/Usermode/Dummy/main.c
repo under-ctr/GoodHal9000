@@ -11,9 +11,9 @@ __main(
     UNREFERENCED_PARAMETER(argc);
     
     UNREFERENCED_PARAMETER(argv);
-    char buffer = 2;
-    QWORD   val;
-    SyscallFileWrite(NULL,buffer,NULL,&val);
+   // char buffer = 2;
+    //QWORD   val;
+    //SyscallFileWrite(NULL,buffer,NULL,&val);
     
     return STATUS_SUCCESS;
 }
