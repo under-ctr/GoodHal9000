@@ -257,6 +257,19 @@ SyscallFileWrite(
     return STATUS_SUCCESS;
 }
 
+
+void
+_No_competing_thread_
+SyscallSystemPreinit(
+	void
+)
+{
+	memzero(&m_umHandlerSystemData, sizeof(UM_HANDLE_SYSTEM_DATA));
+	InitializeListHead(&m_umHandlerSystemData.AllUmHandlersList);
+	LockInit(&m_umHandlerSystemData.AllUmHandlersLock);
+    QWORD UM_Handler_number = 0;
+}
+
 STATUS
 SyscallThreadCreate(
     IN      PFUNC_ThreadStart       StartFunction,
