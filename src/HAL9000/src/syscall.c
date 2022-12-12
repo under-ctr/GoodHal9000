@@ -74,9 +74,7 @@ SyscallHandler(
         case SyscallIdThreadExit:
             status = SyscallThreadExit((STATUS)pSyscallParameters[0]);
             break;
-        case SyscallIdThreadCreate:
-            status = SyscallThreadCreate((PFUNC_ThreadStart)pSyscallParameters[0], (PVOID)pSyscallParameters[1], (UM_HANDLE)pSyscallParameters[2]);
-            break;
+        
         default:
             LOG_ERROR("Unimplemented syscall called from User-space!\n");
             status = STATUS_UNSUPPORTED;
@@ -217,23 +215,7 @@ SyscallFileWrite(
     return STATUS_SUCCESS;
 }
 
-STATUS
-SyscallThreadCreate(
-    IN      PFUNC_ThreadStart       StartFunction,
-    IN_OPT  PVOID                   Context,
-    OUT     UM_HANDLE*              ThreadHandle
-) {
-    char name;
-    PUM_HANDLE_STRUCT HandleStruct;
-    PTHREAD* newThred;
-    ThreadCreate(name, ThreadPriorityDefault, StartFunction, Context, newThred);
-    //HandleStruct->Id = (QWORD)();
-    //add elements in structe and structur in list
-    //see how to implement UM_HANDLE
-	
-    
-        
-}
+
 
 
 STATUS
