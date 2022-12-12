@@ -91,7 +91,7 @@ SyscallHandler(
             status = SyscallThreadCreate((PFUNC_ThreadStart)pSyscallParameters[0], (PVOID)pSyscallParameters[1], (UM_HANDLE*)pSyscallParameters[2]);
             break;
 		case SyscallIdThreadGetTid:
-			status = SyscallThreadGetTid((UM_HANDLE)pSyscallParameters[0], (TID*)pSyscallParameters[1]);
+			//status = SyscallThreadGetTid((UM_HANDLE)pSyscallParameters[0], (TID*)pSyscallParameters[1]);
 			break;
         
 		case SyscallIdThreadWaitForTermination:
@@ -201,25 +201,25 @@ SyscallCpuInit(
     LOG_TRACE_USERMODE("Successfully set STAR to 0x%X\n", starMsr.Raw);
 }
 
-//// SyscallIdIdentifyVersion
-//STATUS
-//SyscallValidateInterface(
-//    IN  SYSCALL_IF_VERSION          InterfaceVersion
-//)
-//{
-//    LOG_TRACE_USERMODE("Will check interface version 0x%x from UM against 0x%x from KM\n",
-//        InterfaceVersion, SYSCALL_IF_VERSION_KM);
-//
-//    if (InterfaceVersion != SYSCALL_IF_VERSION_KM)
-//    {
-//        LOG_ERROR("Usermode interface 0x%x incompatible with KM!\n", InterfaceVersion);
-//        return STATUS_INCOMPATIBLE_INTERFACE;
-//    }
-//
-//    return STATUS_SUCCESS;
-//}
+// SyscallIdIdentifyVersion
+STATUS
+SyscallValidateInterface(
+    IN  SYSCALL_IF_VERSION          InterfaceVersion
+)
+{
+    LOG_TRACE_USERMODE("Will check interface version 0x%x from UM against 0x%x from KM\n",
+        InterfaceVersion, SYSCALL_IF_VERSION_KM);
 
-/*
+    if (InterfaceVersion != SYSCALL_IF_VERSION_KM)
+    {
+        LOG_ERROR("Usermode interface 0x%x incompatible with KM!\n", InterfaceVersion);
+        return STATUS_INCOMPATIBLE_INTERFACE;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+
 STATUS
 SyscallFileWrite(
     IN UM_HANDLE FileHandle,
@@ -238,7 +238,7 @@ SyscallFileWrite(
 
 
 }
-*/
+
 //STATUS
 //SyscallFileWrite(
 //    IN UM_HANDLE File_Handle,
@@ -258,17 +258,17 @@ SyscallFileWrite(
 //}
 
 
-void
-_No_competing_thread_
-SyscallSystemPreinit(
-	void
-)
-{
-	memzero(&m_umHandlerSystemData, sizeof(UM_HANDLE_SYSTEM_DATA));
-	InitializeListHead(&m_umHandlerSystemData.AllUmHandlersList);
-	LockInit(&m_umHandlerSystemData.AllUmHandlersLock);
-    UM_Handler_Value = 4;
-}
+//void
+//_No_competing_thread_
+//SyscallSystemPreinit(
+//	void
+//)
+//{
+//	memzero(&m_umHandlerSystemData, sizeof(UM_HANDLE_SYSTEM_DATA));
+//	InitializeListHead(&m_umHandlerSystemData.AllUmHandlersList);
+//	LockInit(&m_umHandlerSystemData.AllUmHandlersLock);
+//    UM_Handler_Value = 4;
+//}
 
 STATUS
 SyscallThreadCreate(
@@ -302,33 +302,33 @@ SyscallThreadCreate(
 
 }
 
-STATUS
-SyscallThreadGetTid(
-    IN_OPT  UM_HANDLE               ThreadHandle,
-    OUT     TID*                    ThreadId
-) {
-    PTHREAD newThred;
-    INTR_STATE oldIntrState;
-    
-
-	if (ThreadHandle == UM_INVALID_HANDLE_VALUE) {
-		newThred = GetCurrentThread();
-
-		if (newThred == NULL) {
-			return STATUS_UNSUCCESSFUL;
-		}
-
-		*ThreadId = newThred->Id;
-		return STATUS_SUCCESS;
-	}
-    
-	LockAcquire(&m_umHandlerSystemData.AllUmHandlersLock, &oldIntrState);
-	//ListSearchForElement(&m_umHandlerSystemData.AllUmHandlersList, (PLIST_ENTRY)ThreadHandle,FALSE,compare,context);
-	LockRelease(&m_umHandlerSystemData.AllUmHandlersLock, oldIntrState);
-    
-    
-    return STATUS_SUCCESS;
-}
+//STATUS
+//SyscallThreadGetTid(
+//    IN_OPT  UM_HANDLE               ThreadHandle,
+//    OUT     TID*                    ThreadId
+//) {
+//    PTHREAD newThred;
+//    INTR_STATE oldIntrState;
+//    
+//
+//	if (ThreadHandle == UM_INVALID_HANDLE_VALUE) {
+//		newThred = GetCurrentThread();
+//
+//		if (newThred == NULL) {
+//			return STATUS_UNSUCCESSFUL;
+//		}
+//
+//		*ThreadId = newThred->Id;
+//		return STATUS_SUCCESS;
+//	}
+//    
+//	LockAcquire(&m_umHandlerSystemData.AllUmHandlersLock, &oldIntrState);
+//	//ListSearchForElement(&m_umHandlerSystemData.AllUmHandlersList, (PLIST_ENTRY)ThreadHandle,FALSE,compare,context);
+//	LockRelease(&m_umHandlerSystemData.AllUmHandlersLock, oldIntrState);
+//    
+//    
+//    return STATUS_SUCCESS;
+//}
 
 
 STATUS
