@@ -258,17 +258,17 @@ SyscallFileWrite(
 //}
 
 
-//void
-//_No_competing_thread_
-//SyscallSystemPreinit(
-//	void
-//)
-//{
-//	memzero(&m_umHandlerSystemData, sizeof(UM_HANDLE_SYSTEM_DATA));
-//	InitializeListHead(&m_umHandlerSystemData.AllUmHandlersList);
-//	LockInit(&m_umHandlerSystemData.AllUmHandlersLock);
-//    UM_Handler_Value = 4;
-//}
+void
+_No_competing_thread_
+SyscallSystemPreinit(
+	void
+)
+{
+	memzero(&m_umHandlerSystemData, sizeof(UM_HANDLE_SYSTEM_DATA));
+	InitializeListHead(&m_umHandlerSystemData.AllUmHandlersList);
+	LockInit(&m_umHandlerSystemData.AllUmHandlersLock);
+	UM_Handler_Value = 4;
+}
 
 STATUS
 SyscallThreadCreate(
@@ -302,33 +302,33 @@ SyscallThreadCreate(
 
 }
 
-//STATUS
-//SyscallThreadGetTid(
-//    IN_OPT  UM_HANDLE               ThreadHandle,
-//    OUT     TID*                    ThreadId
-//) {
-//    PTHREAD newThred;
-//    INTR_STATE oldIntrState;
-//    
-//
-//	if (ThreadHandle == UM_INVALID_HANDLE_VALUE) {
-//		newThred = GetCurrentThread();
-//
-//		if (newThred == NULL) {
-//			return STATUS_UNSUCCESSFUL;
-//		}
-//
-//		*ThreadId = newThred->Id;
-//		return STATUS_SUCCESS;
-//	}
-//    
-//	LockAcquire(&m_umHandlerSystemData.AllUmHandlersLock, &oldIntrState);
-//	//ListSearchForElement(&m_umHandlerSystemData.AllUmHandlersList, (PLIST_ENTRY)ThreadHandle,FALSE,compare,context);
-//	LockRelease(&m_umHandlerSystemData.AllUmHandlersLock, oldIntrState);
-//    
-//    
-//    return STATUS_SUCCESS;
-//}
+STATUS
+SyscallThreadGetTid(
+    IN_OPT  UM_HANDLE               ThreadHandle,
+    OUT     TID*                    ThreadId
+) {
+    PTHREAD newThred;
+    INTR_STATE oldIntrState;
+    
+
+	if (ThreadHandle == UM_INVALID_HANDLE_VALUE) {
+		newThred = GetCurrentThread();
+
+		if (newThred == NULL) {
+			return STATUS_UNSUCCESSFUL;
+		}
+
+		*ThreadId = newThred->Id;
+		return STATUS_SUCCESS;
+	}
+    
+	LockAcquire(&m_umHandlerSystemData.AllUmHandlersLock, &oldIntrState);
+	//ListSearchForElement(&m_umHandlerSystemData.AllUmHandlersList, (PLIST_ENTRY)ThreadHandle,FALSE,compare,context);
+	LockRelease(&m_umHandlerSystemData.AllUmHandlersLock, oldIntrState);
+    
+    
+    return STATUS_SUCCESS;
+}
 
 
 STATUS

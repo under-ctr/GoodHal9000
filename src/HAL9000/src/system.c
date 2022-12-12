@@ -58,7 +58,7 @@ SystemPreinit(
     CorePreinit();
     NetworkStackPreinit();
     ProcessSystemPreinit();
-    //SyscallSystemPreinit();
+    SyscallSystemPreinit();
 }
 
 STATUS
