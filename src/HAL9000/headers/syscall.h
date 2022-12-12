@@ -13,7 +13,13 @@ typedef struct _UM_HANDLE_STRUCT
 
 } UM_HANDLE_STRUCT, *PUM_HANDLE_STRUCT;
 
+QWORD UM_Handler_Value;
 
+void
+_No_competing_thread_
+SyscallSystemPreinit(
+	void
+);
 
 void
 SyscallPreinitSystem(

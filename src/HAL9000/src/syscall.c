@@ -201,23 +201,23 @@ SyscallCpuInit(
     LOG_TRACE_USERMODE("Successfully set STAR to 0x%X\n", starMsr.Raw);
 }
 
-// SyscallIdIdentifyVersion
-STATUS
-SyscallValidateInterface(
-    IN  SYSCALL_IF_VERSION          InterfaceVersion
-)
-{
-    LOG_TRACE_USERMODE("Will check interface version 0x%x from UM against 0x%x from KM\n",
-        InterfaceVersion, SYSCALL_IF_VERSION_KM);
-
-    if (InterfaceVersion != SYSCALL_IF_VERSION_KM)
-    {
-        LOG_ERROR("Usermode interface 0x%x incompatible with KM!\n", InterfaceVersion);
-        return STATUS_INCOMPATIBLE_INTERFACE;
-    }
-
-    return STATUS_SUCCESS;
-}
+//// SyscallIdIdentifyVersion
+//STATUS
+//SyscallValidateInterface(
+//    IN  SYSCALL_IF_VERSION          InterfaceVersion
+//)
+//{
+//    LOG_TRACE_USERMODE("Will check interface version 0x%x from UM against 0x%x from KM\n",
+//        InterfaceVersion, SYSCALL_IF_VERSION_KM);
+//
+//    if (InterfaceVersion != SYSCALL_IF_VERSION_KM)
+//    {
+//        LOG_ERROR("Usermode interface 0x%x incompatible with KM!\n", InterfaceVersion);
+//        return STATUS_INCOMPATIBLE_INTERFACE;
+//    }
+//
+//    return STATUS_SUCCESS;
+//}
 
 /*
 STATUS
@@ -239,23 +239,23 @@ SyscallFileWrite(
 
 }
 */
-STATUS
-SyscallFileWrite(
-    IN UM_HANDLE File_Handle,
-    IN_READS_BYTES(BytesToWrite)
-    PVOID         buffer,
-    IN QWORD       BytesToWrite,
-    OUT QWORD* BytesWritten
-
-)
-{
-    UNREFERENCED_PARAMETER(File_Handle);
-    UNREFERENCED_PARAMETER(BytesToWrite);
-    LOG("[%s]:[%s]\n", ProcessGetName(NULL), buffer);
-    *BytesWritten = 10;
-
-    return STATUS_SUCCESS;
-}
+//STATUS
+//SyscallFileWrite(
+//    IN UM_HANDLE File_Handle,
+//    IN_READS_BYTES(BytesToWrite)
+//    PVOID         buffer,
+//    IN QWORD       BytesToWrite,
+//    OUT QWORD* BytesWritten
+//
+//)
+//{
+//    UNREFERENCED_PARAMETER(File_Handle);
+//    UNREFERENCED_PARAMETER(BytesToWrite);
+//    LOG("[%s]:[%s]\n", ProcessGetName(NULL), buffer);
+//    *BytesWritten = 10;
+//
+//    return STATUS_SUCCESS;
+//}
 
 
 void
@@ -267,7 +267,7 @@ SyscallSystemPreinit(
 	memzero(&m_umHandlerSystemData, sizeof(UM_HANDLE_SYSTEM_DATA));
 	InitializeListHead(&m_umHandlerSystemData.AllUmHandlersList);
 	LockInit(&m_umHandlerSystemData.AllUmHandlersLock);
-    QWORD UM_Handler_number = 0;
+    UM_Handler_Value = 4;
 }
 
 STATUS
@@ -289,7 +289,7 @@ SyscallThreadCreate(
     ThreadCreate(name, ThreadPriorityDefault, StartFunction, Context, newThred);
     //ThreadHandle = (UM_HANDLE)newThred->Id;
     UmHandler->Thred = newThred;
-    UmHandler->Id = 3;
+    UmHandler->Id = UM_Handler_Value++;
     //o variabila pe care sa o initializez cu zero atunci cand porneste sistemu si incrementata cu 1 
     ThreadHandle =(UM_HANDLE*)UmHandler->Id;
 
@@ -308,6 +308,9 @@ SyscallThreadGetTid(
     OUT     TID*                    ThreadId
 ) {
     PTHREAD newThred;
+    INTR_STATE oldIntrState;
+    
+
 	if (ThreadHandle == UM_INVALID_HANDLE_VALUE) {
 		newThred = GetCurrentThread();
 
@@ -318,6 +321,10 @@ SyscallThreadGetTid(
 		*ThreadId = newThred->Id;
 		return STATUS_SUCCESS;
 	}
+    
+	LockAcquire(&m_umHandlerSystemData.AllUmHandlersLock, &oldIntrState);
+	//ListSearchForElement(&m_umHandlerSystemData.AllUmHandlersList, (PLIST_ENTRY)ThreadHandle,FALSE,compare,context);
+	LockRelease(&m_umHandlerSystemData.AllUmHandlersLock, oldIntrState);
     
     
     return STATUS_SUCCESS;
