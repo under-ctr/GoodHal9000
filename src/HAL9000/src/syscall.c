@@ -20,6 +20,8 @@ typedef struct _UM_HANDLE_SYSTEM_DATA
 	_Guarded_by_(AllUmHandlersLock)
 		LIST_ENTRY          AllUmHandlersList;
 
+    PUM_HANDLE_STRUCT       handler;
+
 
 } UM_HANDLE_SYSTEM_DATA, *PUM_HANDLE_SYSTEM_DATA;
 
@@ -257,6 +259,14 @@ SyscallFileWrite(
 //    return STATUS_SUCCESS;
 //}
 
+//INT64
+//ExTimerCompareTimers(
+//	IN      PEX_TIMER     FirstElem,
+//	IN      PEX_TIMER     SecondElem
+//)
+//{
+//	return FirstElem->TriggerTimeUs - SecondElem->TriggerTimeUs;
+//}
 
 void
 _No_competing_thread_
@@ -282,6 +292,7 @@ SyscallThreadCreate(
     char* name = "name";
     PUM_HANDLE_STRUCT UmHandler;
     INTR_STATE oldIntrState;
+    
 
     newThred = NULL;
     UmHandler = NULL;
@@ -309,6 +320,11 @@ SyscallThreadGetTid(
 ) {
     PTHREAD newThred;
     INTR_STATE oldIntrState;
+    LIST_ITERATOR iterator;
+    PLIST_ENTRY pListEntry;
+    PUM_HANDLE_STRUCT UmHandler;
+   
+
     
 
 	if (ThreadHandle == UM_INVALID_HANDLE_VALUE) {
@@ -324,10 +340,86 @@ SyscallThreadGetTid(
     
 	LockAcquire(&m_umHandlerSystemData.AllUmHandlersLock, &oldIntrState);
 	//ListSearchForElement(&m_umHandlerSystemData.AllUmHandlersList, (PLIST_ENTRY)ThreadHandle,FALSE,compare,context);
+    ListIteratorInit(&m_umHandlerSystemData.AllUmHandlersList, &iterator);
+    while ((pListEntry = ListIteratorNext(&iterator)) != NULL )
+    {
+        UmHandler = CONTAINING_RECORD(pListEntry, UM_HANDLE_SYSTEM_DATA, AllUmHandlersList);
+        if (UmHandler->Id == ThreadHandle) {
+            newThred = UmHandler->Thred;
+           
+            break;
+        }
+    }
+    
 	LockRelease(&m_umHandlerSystemData.AllUmHandlersLock, oldIntrState);
     
+    *ThreadId = newThred->Id;
     
     return STATUS_SUCCESS;
+}
+
+STATUS
+SyscallThreadCloseHandle(
+    IN      UM_HANDLE               ThreadHandle
+) {
+
+	PTHREAD newThred;
+	INTR_STATE oldIntrState;
+	PVOID context;
+	LIST_ITERATOR iterator;
+	PLIST_ENTRY pListEntry;
+	PUM_HANDLE_STRUCT UmHandler;
+
+	LockAcquire(&m_umHandlerSystemData.AllUmHandlersLock, &oldIntrState);
+	//ListSearchForElement(&m_umHandlerSystemData.AllUmHandlersList, (PLIST_ENTRY)ThreadHandle,FALSE,compare,context);
+	ListIteratorInit(&m_umHandlerSystemData.AllUmHandlersList, &iterator);
+	while ((pListEntry = ListIteratorNext(&iterator)) != NULL)
+	{
+		UmHandler = CONTAINING_RECORD(pListEntry, UM_HANDLE_SYSTEM_DATA, AllUmHandlersList);
+		if (UmHandler->Id == ThreadHandle) {
+			//nu stiu cum sa sterg din lista asa ca pun id-ul ca si handler invalid
+            newThred = UmHandler->Thred;
+            UmHandler->Id = UM_INVALID_HANDLE_VALUE;
+
+			break;
+		}
+	}
+	LockRelease(&m_umHandlerSystemData.AllUmHandlersLock, oldIntrState);
+    
+    ThreadCloseHandle(newThred);
+
+    return STATUS_SUCCESS;
+}
+
+STATUS
+SyscallThreadWaitForTermination(
+    IN      UM_HANDLE               ThreadHandle,
+    OUT     STATUS* TerminationStatus
+) {
+	PTHREAD newThred;
+	INTR_STATE oldIntrState;
+	PVOID context;
+	LIST_ITERATOR iterator;
+	PLIST_ENTRY pListEntry;
+	PUM_HANDLE_STRUCT UmHandler;
+
+	LockAcquire(&m_umHandlerSystemData.AllUmHandlersLock, &oldIntrState);
+	//ListSearchForElement(&m_umHandlerSystemData.AllUmHandlersList, (PLIST_ENTRY)ThreadHandle,FALSE,compare,context);
+	ListIteratorInit(&m_umHandlerSystemData.AllUmHandlersList, &iterator);
+	while ((pListEntry = ListIteratorNext(&iterator)) != NULL)
+	{
+		UmHandler = CONTAINING_RECORD(pListEntry, UM_HANDLE_SYSTEM_DATA, AllUmHandlersList);
+		if (UmHandler->Id == ThreadHandle) {
+            newThred = UmHandler->Thred;
+			
+			break;
+		}
+	}
+	LockRelease(&m_umHandlerSystemData.AllUmHandlersLock, oldIntrState);
+    ThreadWaitForTermination(newThred, TerminationStatus);
+
+    return STATUS_SUCCESS;
+
 }
 
 
